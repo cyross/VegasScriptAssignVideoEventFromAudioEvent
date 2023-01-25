@@ -11,20 +11,31 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             VegasScriptSettings.Load();
             VegasHelper helper = VegasHelper.Instance(vegas);
 
-            VegasScriptSettingDialog dialog = new VegasScriptSettingDialog();
-            dialog.SearchTrackName = VegasScriptSettings.TargetAssignTrackName;
-            dialog.JimakuMargin = VegasScriptSettings.AssignEventMargin;
-            
-            if(dialog.ShowDialog() == DialogResult.OK )
+            try
             {
-                string searchName = dialog.SearchTrackName;
-                double margin = dialog.JimakuMargin;
+                VegasScriptSettingDialog dialog = new VegasScriptSettingDialog();
+                dialog.SearchTrackName = VegasScriptSettings.TargetAssignTrackName;
+                dialog.JimakuMargin = VegasScriptSettings.AssignEventMargin;
 
-                helper.AssignAudioTrackDurationToVideoTrack(searchName, margin);
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    string searchName = dialog.SearchTrackName;
+                    double margin = dialog.JimakuMargin;
 
-                VegasScriptSettings.TargetAssignTrackName = searchName;
-                VegasScriptSettings.AssignEventMargin = margin;
-                VegasScriptSettings.Save();
+                    helper.AssignAudioTrackDurationToVideoTrack(searchName, margin);
+
+                    VegasScriptSettings.TargetAssignTrackName = searchName;
+                    VegasScriptSettings.AssignEventMargin = margin;
+                    VegasScriptSettings.Save();
+                }
+            }
+            catch (VegasHelperTrackUnselectedException)
+            {
+                MessageBox.Show("ビデオトラックが選択されていません。");
+            }
+            catch (VegasHelperNoneEventsException)
+            {
+                MessageBox.Show("選択したビデオトラック中にイベントが存在していません。");
             }
         }
     }

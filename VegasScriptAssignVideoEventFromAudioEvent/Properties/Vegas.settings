@@ -20,5 +20,11 @@
     <Setting Name="targetAssignTrackName" Type="System.String" Scope="User">
       <Value Profile="(Default)">Subtitles</Value>
     </Setting>
+    <Setting Name="jimakuOutlineWidth" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1</Value>
+    </Setting>
+    <Setting Name="expandVideoEventMargin" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

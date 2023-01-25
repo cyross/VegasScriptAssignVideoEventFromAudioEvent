@@ -1,11 +1,5 @@
 ﻿using ScriptPortal.Vegas;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
@@ -23,38 +17,40 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             set { box.Rtf = value; }
         }
 
-        public int GetActorNamePositionFromRtf()
+        public int GetJimakuPrefixSeparatorPositionFromRtf()
         {
-            return box.Find(":");
+            int pos = box.Find(":");
+            if (pos == -1) { throw new VegasHelperNotFoundJimakuPrefixException(); }
+            return pos;
         }
 
-        public string GetActorNameFromRtf()
+        public string GetJimakuPrefixFromRtf()
         {
-            int pos = GetActorNamePositionFromRtf();
-            return GetActorNameFromRtf(pos);
+            int pos = GetJimakuPrefixSeparatorPositionFromRtf();
+            return GetJimakuPrefixFromRtf(pos);
         }
 
-        public string GetActorNameFromRtf(int pos)
+        public string GetJimakuPrefixFromRtf(int pos)
         {
-            if (pos == -1)
-            {
-                return null;
-            }
             return box.Text.Substring(0, pos);
         }
 
-        public string GetActorNameFromRtfWithCut()
+        public string GetJimakuPrefixFromRtf(bool withCut = true)
         {
-            int pos = GetActorNamePositionFromRtf();
-            if (pos == -1)
+            int pos = GetJimakuPrefixSeparatorPositionFromRtf();
+            string actor_name = GetJimakuPrefixFromRtf(pos);
+            if (withCut)
             {
-                return null;
+                DeleteJimakuPrefixFromRtf(pos);
             }
-            string actor_name = GetActorNameFromRtf(pos);
+            return actor_name;
+        }
+
+        internal void DeleteJimakuPrefixFromRtf(int pos)
+        {
             box.Select(0, pos + 1);
             box.Cut();
             box.Focus();
-            return actor_name;
         }
 
         internal void SetColorIntoAllRtfText(Color textColor)
@@ -81,18 +77,29 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             return VegasScriptSettings.TextColorByActor[actor_name_key];
         }
 
-        internal void SetTextRGBAParameter(OFXRGBAParameter param, Color color)
+        internal Color GetOutlineColorByActor(string actor_name)
         {
-            OFXColor textColor = new OFXColor(
+            string actor_name_key = VegasScriptSettings.FormatKey(actor_name);
+            if (!VegasScriptSettings.OutlineColorByActor.ContainsKey(actor_name_key))
+            {
+                return Color.Black;
+            }
+
+            return VegasScriptSettings.OutlineColorByActor[actor_name_key];
+        }
+
+        internal void SetRGBAParameter(OFXRGBAParameter param, Color color)
+        {
+            OFXColor ofxColor = new OFXColor(
                 (double)color.R / 255.0,
                 (double)color.G / 255.0,
                 (double)color.B / 255.0,
                 (double)color.A / 255.0
             );
-            param.SetValueAtTime(BaseTimecode, textColor);
+            param.SetValueAtTime(BaseTimecode, ofxColor);
         }
 
-        internal void ApplyTextColorByActor(TrackEvents events)
+        internal void ApplyTextColorByActor(TrackEvents events, double outlineWidth, bool withCut = true)
         {
             foreach (TrackEvent e in events)
             {
@@ -102,31 +109,47 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                 OFXStringParameter ofxStringParam = GetOFXStringParameter(media);
                 if (ofxStringParam is null) { continue; }
 
-                OFXRGBAParameter ofxRGBAParam = GetTextRGBAParameter(media);
-                if (ofxRGBAParam is null) { continue; }
+                OFXRGBAParameter ofxTextRGBAParam = GetTextRGBAParameter(media);
+                if (ofxTextRGBAParam is null) { continue; }
+
+                OFXDoubleParameter ofxOutlineWidthParam = GetOutlineWidthParameter(media);
+                if (ofxOutlineWidthParam is null) { continue; }
+
+                OFXRGBAParameter ofxOutlineRGBAParam = GetOutlineRGBAParameter(media);
+                if (ofxOutlineRGBAParam is null) { continue; }
 
                 Rtf = GetOFXParameterString(ofxStringParam);
 
-                string actor_string = GetActorNameFromRtfWithCut();
-                Color color = GetTextColorByActor(actor_string);
+                string actor_string = GetJimakuPrefixFromRtf(withCut);
+                Color textColor = GetTextColorByActor(actor_string);
+                Color outlineColor = GetOutlineColorByActor(actor_string);
 
-                SetTextRGBAParameter(ofxRGBAParam, color);
+                SetRGBAParameter(ofxTextRGBAParam, textColor);
+                SetDoubleParameter(ofxOutlineWidthParam, outlineWidth);
+                SetRGBAParameter(ofxOutlineRGBAParam, outlineColor);
                 SetStringIntoOFXParameter(ofxStringParam, Rtf);
             }
         }
 
-        internal void ApplyTextColorByActor()
+        internal void ApplyTextColorByActor(double outlineWidth, bool withCut = true)
         {
             TrackEvents events = GetVideoEvents();
-            if (events is null)
-            {
-                return;
-            }
-            if (events.Count == 0)
-            {
-                return;
-            }
-            ApplyTextColorByActor(events);
+            ApplyTextColorByActor(events, outlineWidth, withCut);
+        }
+
+        internal void DeleteJimakuPrefix(TrackEvent trackEvent)
+        {
+            Take firstTake = GetFirstTake(trackEvent);
+            Media media = firstTake.Media;
+
+            OFXStringParameter ofxStringParam = GetOFXStringParameter(media);
+            if (ofxStringParam == null) { return; }
+
+            Rtf = GetOFXParameterString(ofxStringParam);
+
+            int pos = GetJimakuPrefixSeparatorPositionFromRtf();
+            DeleteJimakuPrefixFromRtf(pos);
+            SetStringIntoOFXParameter(ofxStringParam, Rtf);
         }
     }
 }

@@ -79,7 +79,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                     return track;
                 }
             }
-            return null;
+            throw new VegasHelperTrackUnselectedException();
         }
 
         /// <summary>
@@ -100,12 +100,14 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         /// <returns>選択プロジェクトがあればそのTrackオブジェクト、なければnull</returns>
         internal VideoTrack SelectedVideoTrack(Project project)
         {
-            Track track = SelectedTrack();
-            if (track is null)
+            foreach (Track track in project.Tracks)
             {
-                return null;
+                if (track.Selected && track.IsVideo())
+                {
+                    return (VideoTrack)track;
+                }
             }
-            return track.IsVideo() ? (VideoTrack)track : null;
+            throw new VegasHelperTrackUnselectedException();
         }
 
         /// <summary>
@@ -126,12 +128,14 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         /// <returns>選択プロジェクトがあればそのTrackオブジェクト、なければnull</returns>
         internal AudioTrack SelectedAudioTrack(Project project)
         {
-            Track track = SelectedTrack();
-            if (track is null)
+            foreach (Track track in project.Tracks)
             {
-                return null;
+                if (track.Selected && track.IsAudio())
+                {
+                    return (AudioTrack)track;
+                }
             }
-            return track.IsAudio() ? (AudioTrack)track : null;
+            throw new VegasHelperTrackUnselectedException();
         }
 
         internal string GetTrackTitle(Track track)
@@ -142,14 +146,12 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         internal string GetVideoTrackTitle()
         {
             VideoTrack track = SelectedVideoTrack();
-            if (track is null) { return null; }
             return GetTrackTitle(track);
         }
 
         internal string GetAudioTrackTitle()
         {
             AudioTrack track = SelectedAudioTrack();
-            if (track is null) { return null; }
             return GetTrackTitle(track);
         }
 
@@ -161,14 +163,12 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         internal void SetVideoTrackTitle(string title)
         {
             VideoTrack track = SelectedVideoTrack();
-            if (track is null) { return; }
             SetTrackTitle(track, title);
         }
 
         internal void SetAudioTrackTitle(string title)
         {
             AudioTrack track = SelectedAudioTrack();
-            if (track is null) { return; }
             SetTrackTitle(track, title);
         }
 
@@ -182,7 +182,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                     return (VideoTrack)track;
                 }
             }
-            return null;
+            throw new VegasHelperNotFoundTrackException();
         }
 
         internal AudioTrack SearchAudioTrackByName(string name)
@@ -195,7 +195,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                     return (AudioTrack)track;
                 }
             }
-            return null;
+            throw new VegasHelperNotFoundTrackException();
         }
 
         /// <summary>
@@ -274,26 +274,23 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             return current;
         }
 
-        internal TrackEvents GetEvents(Track track)
+        internal TrackEvents GetEvents(Track track, bool throwError = true)
         {
+            if (throwError && track.Events.Count == 0) { throw new VegasHelperNoneEventsException(); }
             return track.Events;
         }
 
-        internal TrackEvents GetVideoEvents()
+        internal TrackEvents GetVideoEvents(bool throwError = true)
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
+            if (throwError && selected.Events.Count == 0) { throw new VegasHelperNoneEventsException(); }
             return selected.Events;
         }
 
-        internal TrackEvents GetAudioEvents()
+        internal TrackEvents GetAudioEvents(bool throwError = true)
         {
             AudioTrack selected = SelectedAudioTrack();
-
-            if (selected is null) { return null; }
-
+            if (throwError && selected.Events.Count == 0) { throw new VegasHelperNoneEventsException(); }
             return selected.Events;
         }
 
@@ -304,7 +301,18 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
 
         internal Take[] GetFirstTakes(TrackEvents events)
         {
-            IEnumerable<Take> takes = events.Select(e => e.Takes[0]);
+            IEnumerable<Take> takes = events.Select(e => GetFirstTake(e));
+            return takes.ToArray();
+        }
+
+        internal Take[] GetLastTakes(Track track)
+        {
+            return GetLastTakes(track.Events);
+        }
+
+        internal Take[] GetLastTakes(TrackEvents events)
+        {
+            IEnumerable<Take> takes = events.Select(e => GetLastTake(e));
             return takes.ToArray();
         }
 
@@ -318,21 +326,20 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             return trackEvent.Takes[0];
         }
 
+        internal Take GetLastTake(TrackEvent trackEvent)
+        {
+            return trackEvent.Takes[trackEvent.Takes.Count - 1];
+        }
+
         internal Take[] GetVideoTakes()
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
             return GetFirstTakes(selected.Events);
         }
 
         internal Take[] GetAudioTakes()
         {
             AudioTrack selected = SelectedAudioTrack();
-
-            if (selected is null) { return null; }
-
             return GetFirstTakes(selected.Events);
         }
 
@@ -349,18 +356,12 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         internal Media[] GetVideoMediaList()
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
             return GetMediaList(selected.Events);
         }
 
         internal Media[] GetAudioMediaList()
         {
             AudioTrack selected = SelectedAudioTrack();
-
-            if (selected is null) { return null; }
-
             return GetMediaList(selected.Events);
         }
 
@@ -371,7 +372,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             return mediaList.ToArray();
         }
 
-        internal OFXStringParameter GetOFXStringParameter(Media media)
+        internal OFXStringParameter GetOFXStringParameter(Media media, bool retNull = true)
         {
             foreach (OFXParameter param in media.Generator.OFXEffect.Parameters)
             {
@@ -380,18 +381,19 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                     return (OFXStringParameter)param;
                 }
             }
-            return null;
+            if (retNull) { return null; }
+            throw new VegasHelperNotFoundOFXParameterException();
         }
 
-        internal OFXStringParameter[] GetOFXStringParameters(Media[] mediaList)
+        internal OFXStringParameter[] GetOFXStringParameters(Media[] mediaList, bool retNull = true)
         {
-            return mediaList.Select(m => GetOFXStringParameter(m)).ToList().ToArray();
+            return mediaList.Select(m => GetOFXStringParameter(m, retNull)).ToList().ToArray();
         }
 
-        internal OFXStringParameter[] GetOFXStringParameters(VideoTrack track)
+        internal OFXStringParameter[] GetOFXStringParameters(VideoTrack track, bool retNull = true)
         {
             Media[] mediaList = GetMediaList(track.Events);
-            return GetOFXStringParameters(mediaList);
+            return GetOFXStringParameters(mediaList, retNull);
         }
 
         /// <summary>
@@ -399,13 +401,10 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         /// ビデオトラックを選択していなければnullを返す
         /// </summary>
         /// <returns>選択したビデオトラックから得られたメディジェネレータ文字列パラメータの配列、もしくはnull</returns>
-        internal OFXStringParameter[] GetOFXStringParameters()
+        internal OFXStringParameter[] GetOFXStringParameters(bool retNull = true)
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
-            return GetOFXStringParameters(selected);
+            return GetOFXStringParameters(selected, retNull);
         }
 
         public string GetOFXParameterString(OFXStringParameter param)
@@ -416,10 +415,6 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         public string GetOFXParameterString(Media media)
         {
             OFXStringParameter param = GetOFXStringParameter(media);
-            if (param is null)
-            {
-                return null;
-            }
             return GetOFXParameterString(param);
         }
 
@@ -431,9 +426,6 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         internal string[] GetOFXParameterStrings()
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
             OFXStringParameter[] ofxParams = GetOFXStringParameters(selected);
             return GetOFXParameterStrings(ofxParams);
         }
@@ -458,7 +450,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             }
         }
 
-        internal OFXRGBAParameter GetTextRGBAParameter(Media media)
+        internal OFXRGBAParameter GetTextRGBAParameter(Media media, bool retNull = true)
         {
             foreach (OFXParameter param in media.Generator.OFXEffect.Parameters)
             {
@@ -468,32 +460,63 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                     return (OFXRGBAParameter)param;
                 }
             }
-            return null;
+            if (retNull) { return null; }
+            throw new VegasHelperNotFoundOFXParameterException();
         }
 
-        internal OFXRGBAParameter[] GetTextRGBAParameters(Media[] mediaList)
+        internal OFXRGBAParameter GetOutlineRGBAParameter(Media media, bool retNull = true)
         {
-            return mediaList.Select(m => GetTextRGBAParameter(m)).ToList().ToArray();
+            foreach (OFXParameter param in media.Generator.OFXEffect.Parameters)
+            {
+                if (param.ParameterType == OFXParameterType.RGBA &&
+                    param.Name == "OutlineColor")
+                {
+                    return (OFXRGBAParameter)param;
+                }
+            }
+            if (retNull) { return null; }
+            throw new VegasHelperNotFoundOFXParameterException();
         }
 
-        internal OFXRGBAParameter[] GetTextRGBAParameters(VideoTrack track)
+        internal OFXDoubleParameter GetOutlineWidthParameter(Media media, bool retNull = true)
+        {
+            foreach (OFXParameter param in media.Generator.OFXEffect.Parameters)
+            {
+                if (param.ParameterType == OFXParameterType.Double &&
+                    param.Name == "OutlineWidth")
+                {
+                    return (OFXDoubleParameter)param;
+                }
+            }
+            if (retNull) { return null; }
+            throw new VegasHelperNotFoundOFXParameterException();
+        }
+
+        internal OFXRGBAParameter[] GetTextRGBAParameters(Media[] mediaList, bool retNull = true)
+        {
+            return mediaList.Select(m => GetTextRGBAParameter(m, retNull)).ToList().ToArray();
+        }
+
+        internal OFXRGBAParameter[] GetTextRGBAParameters(VideoTrack track, bool retNull = true)
         {
             Media[] mediaList = GetMediaList(track.Events);
-            return GetTextRGBAParameters(mediaList);
+            return GetTextRGBAParameters(mediaList, retNull);
         }
 
-        internal OFXRGBAParameter[] GetTextRGBAParameters()
+        internal OFXRGBAParameter[] GetTextRGBAParameters(bool retNull = true)
         {
             VideoTrack selected = SelectedVideoTrack();
-
-            if (selected is null) { return null; }
-
-            return GetTextRGBAParameters(selected);
+            return GetTextRGBAParameters(selected, retNull);
         }
 
-        internal void SetTextRGBAParameter(OFXRGBAParameter param, OFXColor color)
+        internal void SetRGBAParameter(OFXRGBAParameter param, OFXColor color)
         {
             param.SetValueAtTime(BaseTimecode, color);
+        }
+
+        internal void SetDoubleParameter(OFXDoubleParameter param, double value)
+        {
+            param.SetValueAtTime(BaseTimecode, value);
         }
 
         internal VegasDuration GetEventTime(TrackEvent trackEvent)
@@ -535,7 +558,6 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
 
             for (int i = 0; i < videoEvents.Count; i++)
             {
-                int target_index = videoEvents.Count - i - 1;
                 VegasDuration duration = GetEventTime(audioEvents[i]);
                 SetEventTime(tmpVideoEvents[i], duration, margin, adjustTakes);
 
@@ -546,12 +568,104 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
         internal void AssignAudioTrackDurationToVideoTrack(string trackName, double margin = 0, bool adjustTakes = true, bool group = true)
         {
             VideoTrack videoTrack = SearchVideoTrackByName(trackName);
-            if (videoTrack == null) { return; }
-
             AudioTrack audioTrack = SearchAudioTrackByName(trackName);
-            if (audioTrack == null) { return; }
-
             AssignAudioTrackDurationToVideoTrack(videoTrack, audioTrack, margin, adjustTakes, group);
+        }
+
+        internal void AssignAudioTrackDurationToVideoTrack(double margin = 0, bool adjustTakes = true, bool group = true)
+        {
+            VideoTrack videoTrack = SelectedVideoTrack();
+            AudioTrack audioTrack = SelectedAudioTrack();
+            AssignAudioTrackDurationToVideoTrack(videoTrack, audioTrack, margin, adjustTakes, group);
+        }
+
+        internal void DeleteJimakuPrefix()
+        {
+            VideoTrack track = SelectedVideoTrack();
+            DeleteJimakuPrefix(track);
+        }
+        internal void DeleteJimakuPrefix(string title)
+        {
+            VideoTrack track = SearchVideoTrackByName(title);
+            DeleteJimakuPrefix(track);
+        }
+
+        internal void DeleteJimakuPrefix(VideoTrack track)
+        {
+            DeleteJimakuPrefix(track.Events);
+        }
+
+        internal void DeleteJimakuPrefix(TrackEvents trackEvents)
+        {
+            foreach (TrackEvent trackEvent in trackEvents)
+            {
+                DeleteJimakuPrefix(trackEvent);
+            }
+        }
+
+        internal TrackEvent GetFirstEvent(TrackEvents events)
+        {
+            return events[0];
+        }
+
+        internal TrackEvent GetLastEvent(TrackEvents events)
+        {
+            return events[events.Count - 1];
+        }
+
+        /// <summary>
+        /// 選択したトラック内のイベントの開始位置と流さを求める。
+        /// 最初のイベントの開始位置から最後のイベントの終点までをその長さとする。
+        /// また、引数としてマージンもセット可能
+        /// </summary>
+        /// <param name="margin">設定するマージン。初期値は0.0</param>
+        /// <returns></returns>
+        internal VegasDuration GetDuretionFromAllEventsInTrack(double margin = 0.0f)
+        {
+            Track selected = SelectedTrack();
+            return GetDuretionFromAllEventsInTrack(selected, margin);
+        }
+
+        internal VegasDuration GetDuretionFromAllEventsInTrack(Track track, double margin = 0.0f)
+        {
+            TrackEvents events = GetEvents(track);
+            return GetDuretionFromAllEventsInTrack(events);
+        }
+
+        internal VegasDuration GetDuretionFromAllEventsInTrack(TrackEvents events, double margin = 0.0f)
+        {
+            TrackEvent firstEvent = GetFirstEvent(events);
+            TrackEvent lastEvent = GetLastEvent(events);
+
+            Timecode singleMaraginTimecode = new Timecode(margin);
+            Timecode doubleMaraginTimecode = new Timecode(margin * 2);
+
+            VegasDuration duration = new VegasDuration();
+            duration.StartTime = firstEvent.Start - singleMaraginTimecode;
+            duration.Length = lastEvent.Start + lastEvent.Length - firstEvent.Start + doubleMaraginTimecode;
+            return duration;
+        }
+
+        internal long GetLengthFromAllEventsInTrack()
+        {
+            Track selected = SelectedTrack();
+
+            return GetLengthFromAllEventsInTrack(selected);
+        }
+
+        internal long GetLengthFromAllEventsInTrack(Track track)
+        {
+            VegasDuration duration = GetDuretionFromAllEventsInTrack(track);
+
+            return duration.Length.Nanos;
+        }
+
+        internal void ExpandFirstVideoEvent(double margin = 0.0)
+        {
+            TrackEvents videoEvents = GetVideoEvents();
+            TrackEvents audioEvents = GetAudioEvents();
+            VegasDuration duration = GetDuretionFromAllEventsInTrack(audioEvents, margin);
+            SetEventTime(GetFirstEvent(videoEvents), duration);
         }
 
         private List<TrackEvent> RefillTrackEvents(TrackEvents trackEvents)

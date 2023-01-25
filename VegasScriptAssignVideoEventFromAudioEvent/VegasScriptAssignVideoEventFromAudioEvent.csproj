@@ -64,6 +64,11 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>VoiceActorColor.settings</DependentUpon>
     </Compile>
+    <Compile Include="Properties\VoiceActorOutlineColor1.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>VoiceActorOutlineColor.settings</DependentUpon>
+    </Compile>
     <Compile Include="RichTextViererForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -71,6 +76,7 @@
       <DependentUpon>RichTextViererForm.cs</DependentUpon>
     </Compile>
     <Compile Include="VegasHelper.cs" />
+    <Compile Include="VegasHelperException.cs" />
     <Compile Include="VegasHelperWithForm.cs" />
     <Compile Include="VegasScriptSetting.cs">
       <SubType>Form</SubType>
@@ -93,6 +99,10 @@
     <None Include="Properties\VoiceActorColor.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>VoiceActorColor.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Properties\VoiceActorOutlineColor.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>VoiceActorOutlineColor1.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
