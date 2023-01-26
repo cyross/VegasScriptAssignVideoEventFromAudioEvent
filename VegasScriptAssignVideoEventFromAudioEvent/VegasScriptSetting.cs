@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
 {
@@ -17,10 +9,10 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             InitializeComponent();
         }
 
-        public string SearchTrackName
+        public string JimakuTrackTitle
         {
-            get { return searchTrackNameBox.Text; }
-            set { searchTrackNameBox.Text = value; }
+            get { return searchWord.Text; }
+            set { searchWord.Text = value; }
         }
 
         public double JimakuMargin

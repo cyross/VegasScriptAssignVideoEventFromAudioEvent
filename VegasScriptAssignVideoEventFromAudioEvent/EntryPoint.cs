@@ -1,5 +1,5 @@
 ﻿using ScriptPortal.Vegas;
-using System.Drawing;
+using VegasScriptHelper;
 using System.Windows.Forms;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
@@ -14,12 +14,12 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             try
             {
                 VegasScriptSettingDialog dialog = new VegasScriptSettingDialog();
-                dialog.SearchTrackName = VegasScriptSettings.TargetAssignTrackName;
+                dialog.JimakuTrackTitle = VegasScriptSettings.TargetAssignTrackName;
                 dialog.JimakuMargin = VegasScriptSettings.AssignEventMargin;
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    string searchName = dialog.SearchTrackName;
+                    string searchName = dialog.JimakuTrackTitle;
                     double margin = dialog.JimakuMargin;
 
                     helper.AssignAudioTrackDurationToVideoTrack(searchName, margin);
