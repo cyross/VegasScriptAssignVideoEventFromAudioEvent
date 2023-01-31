@@ -10,7 +10,6 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
     {
         public void FromVegas(Vegas vegas)
         {
-            VegasScriptSettings.Load();
             VegasHelper helper = VegasHelper.Instance(vegas);
 
             // コンボボックッスの既定値の優先度:
