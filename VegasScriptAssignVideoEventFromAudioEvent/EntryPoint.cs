@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
 {
-    public class EntryPoint
+    public class EntryPoint: IEntryPoint
     {
         public void FromVegas(Vegas vegas)
         {
