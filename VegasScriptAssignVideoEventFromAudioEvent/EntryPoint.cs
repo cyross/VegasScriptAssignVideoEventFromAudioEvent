@@ -8,6 +8,8 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
 {
     public class EntryPoint: IEntryPoint
     {
+        private static SettingDialog settingDialog = null;
+
         public void FromVegas(Vegas vegas)
         {
             VegasHelper helper = VegasHelper.Instance(vegas);
@@ -53,20 +55,19 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
 
             try
             {
-                SettingDialog dialog = new SettingDialog()
-                {
-                    VoiceTrackNameDataSource = audioKeyList,
-                    VoiceTrackName = audioTrackKey,
-                    JimakuTrackNameDataSource = videoKeyList,
-                    JimakuTrackName = videoTrackKey,
-                    JimakuMargin = VegasScriptSettings.AssignEventMargin
-                };
+                if(settingDialog == null) { settingDialog = new SettingDialog(); }
 
-                if (dialog.ShowDialog() == DialogResult.Cancel) { return; }
+                settingDialog.VoiceTrackNameDataSource = audioKeyList;
+                settingDialog.VoiceTrackName = audioTrackKey;
+                settingDialog.JimakuTrackNameDataSource = videoKeyList;
+                settingDialog.JimakuTrackName = videoTrackKey;
+                settingDialog.JimakuMargin = VegasScriptSettings.AssignEventMargin;
 
-                VideoTrack videoTrack = videoKeyValuePairs[dialog.JimakuTrackName];
-                AudioTrack audioTrack = audioKeyValuePairs[dialog.VoiceTrackName];
-                double margin = dialog.JimakuMargin;
+                if (settingDialog.ShowDialog() == DialogResult.Cancel) { return; }
+
+                VideoTrack videoTrack = videoKeyValuePairs[settingDialog.JimakuTrackName];
+                AudioTrack audioTrack = audioKeyValuePairs[settingDialog.VoiceTrackName];
+                double margin = settingDialog.JimakuMargin;
 
                 helper.AssignAudioTrackDurationToVideoTrack(videoTrack, audioTrack, margin);
 

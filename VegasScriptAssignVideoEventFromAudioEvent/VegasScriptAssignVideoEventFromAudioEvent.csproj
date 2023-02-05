@@ -51,19 +51,19 @@
   <ItemGroup>
     <Compile Include="EntryPoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VegasScriptSetting.cs">
+    <Compile Include="SettingDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="VegasScriptSetting.designer.cs">
-      <DependentUpon>VegasScriptSetting.cs</DependentUpon>
+    <Compile Include="SettingDialog.designer.cs">
+      <DependentUpon>SettingDialog.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="VegasScriptSetting.resx">
-      <DependentUpon>VegasScriptSetting.cs</DependentUpon>
+    <EmbeddedResource Include="SettingDialog.resx">
+      <DependentUpon>SettingDialog.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
