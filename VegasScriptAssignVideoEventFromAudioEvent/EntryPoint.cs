@@ -53,7 +53,7 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
 
             try
             {
-                VegasScriptSettingDialog dialog = new VegasScriptSettingDialog()
+                SettingDialog dialog = new SettingDialog()
                 {
                     VoiceTrackNameDataSource = audioKeyList,
                     VoiceTrackName = audioTrackKey,

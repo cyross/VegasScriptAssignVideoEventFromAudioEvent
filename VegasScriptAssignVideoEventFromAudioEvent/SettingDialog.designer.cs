@@ -1,6 +1,6 @@
 ﻿namespace VegasScriptAssignVideoEventFromAudioEvent
 {
-    partial class VegasScriptSettingDialog
+    partial class SettingDialog
     {
         /// <summary>
         /// Required designer variable.

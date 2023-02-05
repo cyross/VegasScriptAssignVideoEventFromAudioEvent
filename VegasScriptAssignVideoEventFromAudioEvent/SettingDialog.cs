@@ -3,9 +3,9 @@ using System.Windows.Forms;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
 {
-    public partial class VegasScriptSettingDialog : Form
+    public partial class SettingDialog : Form
     {
-        public VegasScriptSettingDialog()
+        public SettingDialog()
         {
             InitializeComponent();
         }
