@@ -3,6 +3,8 @@ using VegasScriptHelper;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+using System;
 
 namespace VegasScriptAssignVideoEventFromAudioEvent
 {
@@ -69,7 +71,10 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
                 AudioTrack audioTrack = audioKeyValuePairs[settingDialog.VoiceTrackName];
                 double margin = settingDialog.JimakuMargin;
 
-                helper.AssignAudioTrackDurationToVideoTrack(videoTrack, audioTrack, margin);
+                using(new UndoBlock("ビデオイベントの長さをオーディオイベントに合わせる"))
+                {
+                    helper.AssignAudioTrackDurationToVideoTrack(videoTrack, audioTrack, margin);
+                }
 
                 VegasScriptSettings.AssignEventMargin = margin;
                 VegasScriptSettings.Save();
@@ -81,6 +86,19 @@ namespace VegasScriptAssignVideoEventFromAudioEvent
             catch (VegasHelperNoneEventsException)
             {
                 MessageBox.Show("選択したビデオトラック中にイベントが存在していません。");
+            }
+            catch (Exception ex)
+            {
+                string errMessage = "[MESSAGE]" + ex.Message + "\n[SOURCE]" + ex.Source + "\n[STACKTRACE]" + ex.StackTrace;
+                Debug.WriteLine("---[Exception In Helper]---");
+                Debug.WriteLine(errMessage);
+                Debug.WriteLine("---------------------------");
+                MessageBox.Show(
+                    errMessage,
+                    "エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                throw ex;
             }
         }
     }
